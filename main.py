@@ -1,8 +1,9 @@
 # @Author:      HgS_1217_
 # @Create Date: 2017/11/20
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, abort
 from config import UPLOAD_IMAGE_FOLDER, UPLOAD_VIDEO_FOLDER, ALLOWED_IMAGE_EXTENSIONS, ALLOWED_VIDEO_EXTENSIONS
+import os
 import time
 
 
@@ -49,6 +50,15 @@ def upload_video():
         return jsonify(dic), 200
     dic = {"error": 1, "msg": "file error or unsupported file format"}
     return jsonify(dic), 404
+
+
+@app.route("/img/<img_path>", methods=['GET'])
+def get_img(img_path):
+    if os.path.isfile(img_path):
+        dirs = img_path.split("/")
+        folder, img_name = "/".join(dirs[:-1]), dirs[-1]
+        return send_from_directory(folder, img_name, as_attachment=True)
+    abort(404)
 
 
 if __name__ == '__main__':
