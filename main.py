@@ -67,6 +67,7 @@ def upload_video():
 
 @app.route("/img/<img_path>", methods=['GET'])
 def get_img(img_path):
+    img_path = img_path.replace("!", "/")
     if os.path.isfile(img_path):
         dirs = img_path.split("/")
         folder, img_name = "/".join(dirs[:-1]), dirs[-1]
@@ -114,7 +115,7 @@ def once_search():
         attrs = reply_list[4:4+attr_num]
         imgs = reply_list[4+attr_num:]
         img_list = list(zip(*[iter(imgs)]*3))
-        img_dics = [{"imgUrl": img[0], "imgWidth": img[1], "imgHeight": img[2]} for img in img_list]
+        img_dics = [{"imgUrl": img[0].replace("/", "!"), "imgWidth": img[1], "imgHeight": img[2]} for img in img_list]
 
         dic = {"h": h, "s": s, "v": v, "attrs": attrs, "images": img_dics,
                "error": 0, "msg": "Once search success"}
