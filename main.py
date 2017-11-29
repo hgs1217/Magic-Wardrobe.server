@@ -110,7 +110,7 @@ def once_search():
         reply = get_socket_reply()
 
         reply_list = reply[:-1].split(";")
-        h, s, v, attr_num = reply_list[0], reply_list[1], reply_list[2], reply_list[3]
+        h, s, v, attr_num = reply_list[0], reply_list[1], reply_list[2], int(reply_list[3])
         attrs = reply_list[4:4+attr_num]
         imgs = reply_list[4+attr_num:]
         img_list = list(zip(*[iter(imgs)]*3))
