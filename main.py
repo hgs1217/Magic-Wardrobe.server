@@ -2,8 +2,7 @@
 # @Create Date: 2017/11/20
 
 from flask import Flask, request, jsonify, send_from_directory, abort
-from config import UPLOAD_IMAGE_FOLDER, UPLOAD_VIDEO_FOLDER, ALLOWED_IMAGE_EXTENSIONS, \
-    ALLOWED_VIDEO_EXTENSIONS, SOCKET_HOST, SOCKET_PORT, SOCKET_REPLY_PATH, DATASET_IMAGE_PREFIX
+import config
 import os
 import time
 import socket
@@ -15,21 +14,21 @@ app.secret_key = "sjtu"
 
 
 def allowed_img(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_IMAGE_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1] in config.ALLOWED_IMAGE_EXTENSIONS
 
 
 def allowed_video(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_VIDEO_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1] in config.ALLOWED_VIDEO_EXTENSIONS
 
 
 def socket_communication(cmd):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SOCKET_HOST, SOCKET_PORT))
+    client.connect((config.SOCKET_HOST, config.SOCKET_PORT))
     client.send(cmd)
 
 
 def get_socket_reply():
-    with codecs.open(SOCKET_REPLY_PATH, "r", encoding="gbk") as f:
+    with codecs.open(config.SOCKET_REPLY_PATH, "r", encoding="gbk") as f:
         return f.read()
 
 
@@ -44,7 +43,7 @@ def upload_img():
     if file and allowed_img(file.filename):
         current_time = time.localtime()
         filename = time.strftime("%Y%m%d%H%M%S", current_time) + '.' + file.filename.rsplit('.', 1)[1]
-        path = UPLOAD_IMAGE_FOLDER + "/" + filename
+        path = config.UPLOAD_IMAGE_FOLDER + "/" + filename
         file.save(path)
         dic = {"fileName": filename, "path": path, "error": 0, "msg": "Upload file success"}
         return jsonify(dic), 200
@@ -58,7 +57,7 @@ def upload_video():
     if file and allowed_video(file.filename):
         current_time = time.localtime()
         filename = time.strftime("%Y%m%d%H%M%S", current_time) + '.' + file.filename.rsplit('.', 1)[1]
-        path = UPLOAD_VIDEO_FOLDER + "/" + filename
+        path = config.UPLOAD_VIDEO_FOLDER + "/" + filename
         file.save(path)
         dic = {"fileName": filename, "path": path, "error": 0, "msg": "Upload file success"}
         return jsonify(dic), 200
@@ -114,12 +113,15 @@ def once_search():
 
         reply_list = reply[:-1].split(";")
         h, s, v, attr_num = reply_list[0], reply_list[1], reply_list[2], int(reply_list[3])
-        attrs = reply_list[4:4+attr_num]
-        imgs = reply_list[4+attr_num:]
-        img_list = list(zip(*[iter(imgs)]*3))
-        img_dics = [{"imgUrl": (DATASET_IMAGE_PREFIX + img[0]).replace("\\", "/").replace("/", "!"),
-                     "imgWidth": img[1],
-                     "imgHeight": img[2]} for img in img_list]
+        attrs = reply_list[4:4 + attr_num]
+        imgs = reply_list[4 + attr_num:]
+        img_list = list(zip(*[iter(imgs)] * 3))
+        img_dics = [{
+            "imgUrl": img[0].replace(config.ONCE_SEARCH_IMAGE_PREFIX,
+                                     config.DATASET_IMAGE_PREFIX).replace("\\", "/").replace("/", "!"),
+            "imgWidth": img[1],
+            "imgHeight": img[2]
+        } for img in img_list]
 
         dic = {"h": h, "s": s, "v": v, "attrs": attrs, "images": img_dics,
                "error": 0, "msg": "Once search success"}
