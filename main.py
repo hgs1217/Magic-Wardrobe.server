@@ -3,7 +3,7 @@
 
 from flask import Flask, request, jsonify, send_from_directory, abort
 from config import UPLOAD_IMAGE_FOLDER, UPLOAD_VIDEO_FOLDER, ALLOWED_IMAGE_EXTENSIONS, \
-    ALLOWED_VIDEO_EXTENSIONS, SOCKET_HOST, SOCKET_PORT, SOCKET_REPLY_PATH
+    ALLOWED_VIDEO_EXTENSIONS, SOCKET_HOST, SOCKET_PORT, SOCKET_REPLY_PATH, DATASET_IMAGE_PREFIX
 import os
 import time
 import socket
@@ -23,12 +23,13 @@ def allowed_video(filename):
 
 
 def socket_communication(cmd):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.sendto(cmd, (SOCKET_HOST, SOCKET_PORT))
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((SOCKET_HOST, SOCKET_PORT))
+    client.send(cmd)
 
 
 def get_socket_reply():
-    with codecs.open("E:/a.txt", "r", encoding="gbk") as f:
+    with codecs.open(SOCKET_REPLY_PATH, "r", encoding="gbk") as f:
         return f.read()
 
 
@@ -104,7 +105,8 @@ def once_search():
     width = request.args.get("width")
     height = request.args.get("height")
     alo = request.args.get("alo")
-    cmd = ";".join(["0", gender, tp, x, y, width, height, img_url, alo]) + ";"
+    pos_size = ",".join([x, y, width, height])
+    cmd = ";".join(["0", gender, tp, pos_size, img_url, alo]) + ";"
 
     try:
         socket_communication(cmd)
@@ -115,7 +117,9 @@ def once_search():
         attrs = reply_list[4:4+attr_num]
         imgs = reply_list[4+attr_num:]
         img_list = list(zip(*[iter(imgs)]*3))
-        img_dics = [{"imgUrl": img[0].replace("/", "!"), "imgWidth": img[1], "imgHeight": img[2]} for img in img_list]
+        img_dics = [{"imgUrl": (DATASET_IMAGE_PREFIX + img[0]).replace("\\", "/").replace("/", "!"),
+                     "imgWidth": img[1],
+                     "imgHeight": img[2]} for img in img_list]
 
         dic = {"h": h, "s": s, "v": v, "attrs": attrs, "images": img_dics,
                "error": 0, "msg": "Once search success"}
