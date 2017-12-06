@@ -28,6 +28,7 @@ def socket_communication(cmd):
 
 
 def get_socket_reply():
+    time.sleep(2)
     with codecs.open(config.SOCKET_REPLY_PATH, "r", encoding="gbk") as f:
         return f.read()
 
